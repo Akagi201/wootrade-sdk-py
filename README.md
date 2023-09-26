@@ -1,5 +1,7 @@
 # wootrade-sdk-py
 
+[![PyPI version](https://badge.fury.io/py/wootrade-sdk.svg)](https://badge.fury.io/py/wootrade-sdk)
+
 api doc: <https://docs.woo.org/#general-information>
 
 Fork from <https://github.com/wanth1997/python-wooX> to make it work.
