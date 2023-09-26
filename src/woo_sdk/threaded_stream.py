@@ -2,7 +2,8 @@ import asyncio
 import threading
 from typing import Callable, Dict, Optional
 
-from woo_sdk.client import AsyncClient
+from .client import AsyncClient
+from .helpers import get_loop
 
 
 class ThreadedApiManager(threading.Thread):
@@ -15,7 +16,7 @@ class ThreadedApiManager(threading.Thread):
     ):
         """Initialise the WootradeSocketManager"""
         super().__init__()
-        self._loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
+        self._loop: asyncio.AbstractEventLoop = get_loop()
         self._client: Optional[AsyncClient] = None
         self._running: bool = True
         self._socket_running: Dict[str, bool] = {}
@@ -30,7 +31,7 @@ class ThreadedApiManager(threading.Thread):
         ...
 
     async def socket_listener(self):
-        self._client = await AsyncClient.create(loop=self._loop, **self._client_params)
+        self._client = await AsyncClient.create(**self._client_params)
         await self._before_socket_listener_start()
         while self._running:
             await asyncio.sleep(0.2)
@@ -47,11 +48,13 @@ class ThreadedApiManager(threading.Thread):
                 except asyncio.TimeoutError:
                     ...
                     continue
-                if not msg:
-                    continue
-                if "event" in msg and msg["event"] == "ping":
-                    ping(name)
-                callback(msg)
+                else:
+                    if not msg:
+                        continue
+                    if "event" in msg and msg["event"] == "ping":
+                        if ping is not None:
+                            ping(name)
+                    callback(msg)
         del self._socket_running[name]
 
     def run(self):
@@ -62,7 +65,8 @@ class ThreadedApiManager(threading.Thread):
             self._socket_running[socket_name] = False
 
     async def stop_client(self):
-        await self._client.close_connection()
+        if self._client is not None:
+            await self._client.close_connection()
 
     def stop(self):
         if not self._running:
@@ -70,5 +74,4 @@ class ThreadedApiManager(threading.Thread):
         self._running = False
         self._loop.call_soon(asyncio.create_task, self.stop_client())
         for socket_name in self._socket_running.keys():
-            self._socket_running[socket_name] = False
             self._socket_running[socket_name] = False

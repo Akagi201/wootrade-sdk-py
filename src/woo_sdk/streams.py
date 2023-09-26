@@ -9,9 +9,9 @@ from typing import Callable, Optional
 
 import websockets as ws
 
-from woo_sdk.authentication import signature
-from woo_sdk.client import AsyncClient
-
+from .authentication import signature
+from .client import AsyncClient
+from .helpers import get_loop
 from .threaded_stream import ThreadedApiManager
 
 KEEPALIVE_TIMEOUT = 5 * 60  # 5 minutes
@@ -31,13 +31,12 @@ class ReconnectingWebsocket:
 
     def __init__(
         self,
-        loop,
         url: str,
         name: Optional[str] = None,
         is_binary: bool = False,
         exit_coro=None,
     ):
-        self._loop = loop or asyncio.get_event_loop()
+        self._loop = get_loop()
         self._log = logging.getLogger(__name__)
         self._name = name
         self._url = url
@@ -46,9 +45,9 @@ class ReconnectingWebsocket:
         self._is_binary = is_binary
         self._conn = None
         self._socket = None
-        self.ws: Optional[ws.WebSocketClientProtocol] = None
+        self.ws: Optional[ws.client.WebSocketClientProtocol] = None  # type: ignore
         self.ws_state = WSListenerState.INITIALISING
-        self._queue = asyncio.Queue(loop=self._loop)
+        self._queue = asyncio.Queue()
 
     async def __aenter__(self):
         await self.connect()
@@ -60,31 +59,27 @@ class ReconnectingWebsocket:
         self.ws_state = WSListenerState.EXITING
         if self.ws:
             self.ws.fail_connection()
-        if self._conn:
+        if self._conn and hasattr(self._conn, "protocol"):
             await self._conn.__aexit__(exc_type, exc_val, exc_tb)
         self.ws = None
 
     async def connect(self):
         await self._before_connect()
         assert self._name
-        self._conn = ws.connect(self._url, close_timeout=0.001)
+        self._conn = ws.connect(self._url, close_timeout=0.1)  # type: ignore
         try:
             self.ws = await self._conn.__aenter__()
         except:  # noqa
             await self._reconnect()
             return
         self.ws_state = WSListenerState.STREAMING
-
         self._reconnects = 0
         await self._after_connect()
         self._loop.call_soon_threadsafe(asyncio.create_task, self._read_loop())
 
-    async def _run(self):
-        pass
-
     async def send_msg(self, msg):
         while not self.ws:
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
         await self.ws.send(json.dumps(msg))
 
     async def _before_connect(self):
@@ -210,10 +205,9 @@ class WootradeSocketManager:
     def __init__(
         self,
         client: AsyncClient,
-        loop=None,
     ):
         self._conns = {}
-        self._loop = loop or asyncio.get_event_loop()
+        self._loop = get_loop()
         self._client = client
         self.testnet = self._client.testnet
         self._log = logging.getLogger("WootradeSocketManager")
@@ -241,7 +235,6 @@ class WootradeSocketManager:
             url = self.ws_url
         if conn_id not in self._conns:
             self._conns[conn_id] = ReconnectingWebsocket(
-                loop=self._loop,
                 name=socket_name,
                 url=url,
                 exit_coro=self._exit_socket,
@@ -284,7 +277,7 @@ class ThreadedWebsocketManager(ThreadedApiManager):
 
     async def _before_socket_listener_start(self):
         assert self._client
-        self._bsm = WootradeSocketManager(client=self._client, loop=self._loop)
+        self._bsm = WootradeSocketManager(client=self._client)
 
     def _start_socket(
         self,

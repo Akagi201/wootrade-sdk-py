@@ -1,6 +1,3 @@
-# coding=utf-8
-
-
 class WootradeAPIException(Exception):
     def __init__(self, resp_json, status_code):
         self.message = resp_json["message"]

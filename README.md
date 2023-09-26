@@ -1,5 +1,7 @@
 # woo-sdk-py
 
+api doc: <https://docs.woo.org/#general-information>
+
 Fork from <https://github.com/wanth1997/python-wooX> to make it work.
 
 ## Install dep

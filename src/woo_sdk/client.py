@@ -5,8 +5,8 @@ from typing import Dict, Optional
 import aiohttp
 import requests
 
-from woo_sdk.authentication import signature
-from woo_sdk.exceptions import WootradeAPIException, WootradeValueError
+from .authentication import signature
+from .exceptions import WootradeAPIException, WootradeValueError
 
 
 class BaseClient:
@@ -206,9 +206,8 @@ class AsyncClient(BaseClient):
         secret: Optional[str],
         application_id: str,
         testnet: bool,
-        loop=None,
     ):
-        self = cls(api, secret, application_id, testnet, loop)
+        self = cls(api, secret, application_id, testnet)
         return self
 
     def _init_session(self) -> aiohttp.ClientSession:
