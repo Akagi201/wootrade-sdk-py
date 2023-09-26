@@ -1,4 +1,4 @@
-from woo_sdk.client import Client
+from wootrade_sdk.client import Client
 
 api = ""  # Fill your api key
 secret = ""  # Fill your secret key

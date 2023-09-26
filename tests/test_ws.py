@@ -1,6 +1,6 @@
 import os
 
-from woo_sdk.streams import ThreadedWebsocketManager
+from wootrade_sdk.streams import ThreadedWebsocketManager
 
 API = os.getenv("API")
 SECRET = os.getenv("SECRET")

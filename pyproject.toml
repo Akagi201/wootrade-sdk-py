@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "woo_sdk"
+name = "wootrade_sdk"
 version = "0.1.0"
 description = ""
 authors = ["Akagi201 <akagi201@gmail.com>"]
 readme = "README.md"
-packages = [{include = "woo_sdk", from = "src"}]
+packages = [{include = "wootrade_sdk", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"

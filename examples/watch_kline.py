@@ -1,4 +1,4 @@
-from woo_sdk.streams import ThreadedWebsocketManager
+from wootrade_sdk.streams import ThreadedWebsocketManager
 
 
 def on_read(payload):

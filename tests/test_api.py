@@ -4,7 +4,7 @@ import pprint
 from datetime import timezone
 
 import pytest
-from woo_sdk.client import Client
+from wootrade_sdk.client import Client
 
 API = os.getenv("API")
 SECRET = os.getenv("SECRET")
